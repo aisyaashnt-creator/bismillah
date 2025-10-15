@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Operasi Pengurangan Bilangan Bulat - Garis Bilangan</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --width: 840px;
+      --height: 140px;
+      --offset: 12;   /* berguna untuk memindahkan -12 menjadi index 0 */
+      --step: 30px;   /* jarak antar bilangan */
+    }
+
+    body{
+      margin:0;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      background: linear-gradient(to bottom, #fff3d1, #fff7e6);
+      color:#222;
+      text-align:center;
+      padding: 18px 10px 40px;
+    }
+
+    h2{ margin: 8px 0 14px; font-size:28px; }
+
+    .input-row{
+      margin:6px 0 12px;
+      font-size:16px;
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    input[type="number"]{
+      width:70px;
+      padding:6px 8px;
+      font-size:16px;
+      border-radius:8px;
+      border:1px solid #cfa25a;
+      text-align:center;
+    }
+
+    button{
+      background: linear-gradient(#ffb020,#f29600);
+      border:none;
+      color:#fff;
+      padding:8px 14px;
+      border-radius:8px;
+      cursor:pointer;
+      box-shadow:0 2px 0 rgba(0,0,0,0.08);
+      font-size:15px;
+    }
+    button:hover{ transform: translateY(-1px); }
+
+    .panel {
+      width: calc(var(--width) + 40px);
+      max-width: 95%;
+      margin: 18px auto;
+      background: #fff8e6;
+      padding: 18px 20px;
+      border-radius:10px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    }
+
+    .garis {
+      position: relative;
+      width: var(--width);
+      height: var(--height);
+      margin: 4px auto 8px;
+      border-top: 3px solid #111;
+      box-sizing: border-box;
+      overflow: visible;
+    }
+
+    /* tanda-titik (skala) */
+    .tick {
+      position: absolute;
+      top: -6px;
+      width: 2px;
+      height: 12px;
+      background: #111;
+      transform: translateX(-50%);
+    }
+    .label {
+      position: absolute;
+      top: 12px;
+      transform: translateX(-50%);
+      font-size:13px;
+      color: #0645ad; /* biru */
+    }
+
+    /* garis panah (dashed) */
+    .panah {
+      position: absolute;
+      top: 34px;
+      height: 0;
+      border-top: 3px dashed;
+      display: block;
+      transform-origin: left center;
+    }
+    .panah .arrowhead {
+      position:absolute;
+      top: -8px;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 10px solid; /* warna akan diwariskan via border-top-color */
+    }
+
+    .label-inline {
+      position:absolute;
+      top: 6px;
+      font-size:13px;
+    }
+
+    .dot {
+      position:absolute;
+      top: 62px;
+      width: 12px;
+      height: 12px;
+      border-radius:50%;
+      transform: translateX(-50%);
+      box-shadow:0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    .hasil-box{
+      display:inline-block;
+      margin-top:14px;
+      padding:10px 18px;
+      border-radius:10px;
+      background:#fff3cf;
+      border:2px solid #f1b12b;
+      font-size:20px;
+      color:#222;
+      min-width:180px;
+    }
+
+    .note { font-size:13px; color:#444; margin-top:8px; }
+    @media (max-width:520px){
+      :root{ --step: 26px; --width:720px; }
+      .garis{ height:120px; }
+    }
+  </style>
+</head>
+<body>
+  <h2>Operasi Pengurangan Bilangan Bulat</h2>
+
+  <div class="input-row">
+    <label>Bilangan Pertama
+      <input id="bil1" type="number" value="6">
+    </label>
+    <span style="font-size:20px; font-weight:600"> - </span>
+    <label>Bilangan Kedua
+      <input id="bil2" type="number" value="-5">
+    </label>
+
+    <button onclick="mulai()">Mulai</button>
+    <button onclick="bersihkan()">Refresh</button>
+  </div>
+
+  <div class="panel">
+    <div class="garis" id="garis"></div>
+    <div style="text-align:center;">
+      <div id="hasil" class="hasil-box" aria-live="polite">Hasil akan muncul di sini</div>
+      <div class="note">Garis bilangan: dari -12 sampai 12 (otomatis ter-clamp jika input di luar jangkauan)</div>
+    </div>
+  </div>
+
+  <script>
+    // pengaturan
+    const MIN = -12, MAX = 12;
+    const offset = 12;          // index shift agar -12 menjadi 0
+    const step = 30;            // px per satu bilangan (cocokkan dengan CSS root)
+    const garisEl = document.getElementById('garis');
+    const hasilEl = document.getElementById('hasil');
+
+    // buat garis skala -12 ... 12
+    function buatGaris(){
+      garisEl.innerHTML = '';
+      for(let i = MIN; i <= MAX; i++){
+        const x = (i + offset) * step;
+        const tick = document.createElement('div');
+        tick.className = 'tick';
+        tick.style.left = x + 'px';
+        garisEl.appendChild(tick);
+
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.style.left = x + 'px';
+        label.textContent = i;
+        garisEl.appendChild(label);
+      }
+    }
+
+    // memetakan nilai bilangan ke pixel (dengan clamp agar tetap di garisan)
+    function toPixel(value){
+      const v = Math.max(MIN, Math.min(MAX, value));
+      return (v + offset) * step;
+    }
+
+    // fungsi utama: gambar panah dari a ke result (a - b)
+    function mulai(){
+      buatGaris();
+      // ambil input
+      let a = parseInt(document.getElementById('bil1').value, 10);
+      let b = parseInt(document.getElementById('bil2').value, 10);
+
+      if (Number.isNaN(a) || Number.isNaN(b)){
+        hasilEl.textContent = 'Masukkan bilangan yang valid.';
+        return;
+      }
+
+      // hasil matematika
+      let result = a - b;
+
+      // tampilkan hasil numerik
+      hasilEl.textContent = `${a} - (${b}) = ${result}`;
+
+      // clamp untuk tampilan (agar tetap berada di area garis)
+      // tetapi perhitungan result tetap sesuai matematika
+      const aClamped = Math.max(MIN, Math.min(MAX, a));
+      const resultClamped = Math.max(MIN, Math.min(MAX, result));
+
+      // pos pixel
+      const startPx = toPixel(aClamped);
+      const endPx   = toPixel(resultClamped);
+      let widthPx = endPx - startPx;
+
+      // buat panah (garis putus-putus) — jika width negatif, gambar dari end ke start dan geser arrowhead
+      const panah = document.createElement('div');
+      panah.className = 'panah';
+      panah.style.borderTopStyle = 'dashed';
+      panah.style.borderTopWidth = '3px';
+      // warna panah: biru untuk langkah pengurangan (menunjukkan -b), merah untuk mula (opsional)
+      panah.style.borderTopColor = '#0645ad';
+
+      if (widthPx === 0){
+        // jika hasil sama dengan titik awal (nol panjang), tampilkan tanda pendek dan arrowhead di kanan
+        panah.style.left = startPx + 'px';
+        panah.style.width = '16px';
+      } else if (widthPx > 0){
+        panah.style.left = startPx + 'px';
+        panah.style.width = widthPx + 'px';
+      } else {
+        // ke kiri: posisikan di endPx dan panjang adalah abs(widthPx)
+        panah.style.left = endPx + 'px';
+        panah.style.width = Math.abs(widthPx) + 'px';
+      }
+
+      // buat arrowhead (warna sama dengan garis)
+      const arrow = document.createElement('span');
+      arrow.className = 'arrowhead';
+      // set warna panahhead (border-top-color)
+      arrow.style.borderTopColor = panah.style.borderTopColor;
+
+      // tempatkan arrowhead di ujung kanan panah; kalau panah digambar ke kiri, tempatkan di kiri
+      if (widthPx >= 0){
+        // arah kanan -> taruh arrowhead di ujung kanan
+        arrow.style.right = '-8px';
+      } else {
+        // arah kiri -> putar arrowhead ke bawah (butuh mirroring)
+        arrow.style.left = '-8px';
+        arrow.style.transform = 'rotate(180deg)';
+      }
+
+      panah.appendChild(arrow);
+      garisEl.appendChild(panah);
+
+      // tambahkan label awal (merah) yang menunjukkan posisi a (tetap di posisi asli jika di luar range akan di-clamp)
+      const labelA = document.createElement('div');
+      labelA.className = 'label-inline';
+      labelA.style.left = startPx + 'px';
+      labelA.style.color = '#d6453b';
+      labelA.textContent = a;
+      garisEl.appendChild(labelA);
+
+      // tambahkan label langkah (di tengah panah)
+      const mid = (parseFloat(panah.style.left) + parseFloat(panah.style.width) / 2);
+      const stepLabel = document.createElement('div');
+      stepLabel.className = 'label-inline';
+      stepLabel.style.top = '18px';
+      stepLabel.style.left = (mid) + 'px';
+      stepLabel.style.color = '#0645ad';
+      stepLabel.textContent = `(${ -b })`; // tunjukkan langkah (mis. -(-5) => 5)
+      garisEl.appendChild(stepLabel);
+
+      // titik hasil (hijau) — letakkan pada posisi resultClamped
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.left = endPx + 'px';
+      dot.style.background = '#2a9d3a';
+      garisEl.appendChild(dot);
+
+      // catatan: jika a atau result awalnya di luar range, tampilan akan di-clamp pada -12/12
+    }
+
+    function bersihkan(){
+      document.getElementById('bil1').value = '';
+      document.getElementById('bil2').value = '';
+      hasilEl.textContent = 'Hasil akan muncul di sini';
+      buatGaris();
+    }
+
+    // inisialisasi
+    buatGaris();
+  </script>
+</body>
+</html>
