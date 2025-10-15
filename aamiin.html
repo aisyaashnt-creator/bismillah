@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Operasi Pengurangan Bilangan Bulat</title>
+  <style>
+    body {
+      font-family: "Trebuchet MS", sans-serif;
+      text-align: center;
+      background: linear-gradient(to bottom, #fff3d1, #fff7e6);
+      margin: 0;
+      padding: 0;
+    }
+    h2 {
+      margin-top: 20px;
+    }
+    .input-container {
+      margin: 15px;
+      font-size: 18px;
+    }
+    input {
+      width: 60px;
+      font-size: 18px;
+      text-align: center;
+      margin: 0 5px;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      font-size: 16px;
+      padding: 8px 15px;
+      margin: 10px 5px;
+      border: none;
+      border-radius: 8px;
+      background-color: orange;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: darkorange;
+    }
+    .garis {
+      position: relative;
+      width: 800px;
+      height: 120px;
+      margin: 20px auto;
+      border-top: 2px solid black;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+    }
+    .angka {
+      position: absolute;
+      top: 5px;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: blue;
+    }
+    .panah {
+      position: absolute;
+      top: 40px;
+      height: 0;
+      border-top: 2px dashed;
+    }
+    .hasil-box {
+      display: inline-block;
+      margin: 20px;
+      padding: 10px 20px;
+      border: 2px solid orange;
+      border-radius: 10px;
+      background: #fff3d1;
+      font-size: 20px;
+    }
+    .dot {
+      position: absolute;
+      top: 70px;
+      width: 10px;
+      height: 10px;
+      background: green;
+      border-radius: 50%;
+      transform: translateX(-50%);
+    }
+  </style>
+</head>
+<body>
+  <h2>Operasi Pengurangan Bilangan Bulat</h2>
+
+  <div class="input-container">
+    Bilangan Pertama 
+    <input type="number" id="bil1" value="6"> 
+    - 
+    Bilangan Kedua 
+    <input type="number" id="bil2" value="-5">
+  </div>
+
+  <button onclick="mulai()">Mulai</button>
+  <button onclick="refresh()">Refresh</button>
+
+  <div class="garis" id="garis"></div>
+  <div id="hasil" class="hasil-box"></div>
+
+  <script>
+    const garis = document.getElementById("garis");
+
+    function buatGaris() {
+      garis.innerHTML = "";
+      for (let i = -12; i <= 12; i++) {
+        let angka = document.createElement("div");
+        angka.className = "angka";
+        angka.style.left = ((i + 12) * 30) + "px";
+        angka.textContent = i;
+        garis.appendChild(angka);
+      }
+    }
+
+    function mulai() {
+      buatGaris();
+      let a = parseInt(document.getElementById("bil1").value);
+      let b = parseInt(document.getElementById("bil2").value);
+
+      let hasil = a - b;
+
+      // panah pertama (posisi bilangan pertama)
+      let panah1 = document.createElement("div");
+      panah1.className = "panah";
+      panah1.style.borderColor = "red";
+      panah1.style.left = ((0 + 12) * 30) + "px";
+      panah1.style.width = ((a) * 30) + "px";
+      garis.appendChild(panah1);
+
+      // label bilangan pertama
+      let label1 = document.createElement("div");
+      label1.style.position = "absolute";
+      label1.style.top = "20px";
+      label1.style.left = ((a + 12) * 30) + "px";
+      label1.style.color = "red";
+      label1.textContent = a;
+      garis.appendChild(label1);
+
+      // panah kedua (bilangan kedua, dengan tanda minus jadi berlawanan)
+      let panah2 = document.createElement("div");
+      panah2.className = "panah";
+      panah2.style.borderColor = "blue";
+      panah2.style.left = ((a + 12) * 30) + "px";
+      panah2.style.width = ((-b) * 30) + "px"; 
+      garis.appendChild(panah2);
+
+      let label2 = document.createElement("div");
+      label2.style.position = "absolute";
+      label2.style.top = "20px";
+      label2.style.left = ((a + (-b) + 12) * 30) + "px";
+      label2.style.color = "blue";
+      label2.textContent = "(" + b + ")";
+      garis.appendChild(label2);
+
+      // titik hasil
+      let dot = document.createElement("div");
+      dot.className = "dot";
+      dot.style.left = ((hasil + 12) * 30) + "px";
+      garis.appendChild(dot);
+
+      document.getElementById("hasil").textContent = `${a} - (${b}) = ${hasil}`;
+    }
+
+    function refresh() {
+      document.getElementById("bil1").value = "";
+      document.getElementById("bil2").value = "";
+      document.getElementById("hasil").textContent = "";
+      buatGaris();
+    }
+
+    // inisialisasi garis saat pertama kali
+    buatGaris();
+  </script>
+</body>
+</html>
